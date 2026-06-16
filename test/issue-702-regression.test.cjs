@@ -10,7 +10,7 @@ const localeFiles = [
     'locals_zh-TW.js',
 ];
 
-const protectedReactMutationSelectors = [
+const protectedReactGlobalNavSelectors = [
     'header.GlobalNav',
     '#__primerPortalRoot__',
 ];
@@ -33,15 +33,19 @@ function loadConfig(fileName) {
 }
 
 for (const fileName of localeFiles) {
-    test(`${fileName} skips React global navigation only during mutation translation`, () => {
+    test(`${fileName} keeps React global navigation out of generic DOM traversal`, () => {
         const config = loadConfig(fileName);
         const mutationSelectors = config.ignoreMutationSelectorPage['*'];
         const traversalSelectors = config.ignoreSelectorPage['*'];
 
-        for (const selector of protectedReactMutationSelectors) {
+        for (const selector of protectedReactGlobalNavSelectors) {
             assert.ok(
                 mutationSelectors.includes(selector),
                 `${selector} must be ignored by MutationObserver translation`,
+            );
+            assert.ok(
+                traversalSelectors.includes(selector),
+                `${selector} must be ignored during the initial DOM traversal`,
             );
         }
 
@@ -52,20 +56,16 @@ for (const fileName of localeFiles) {
             );
         }
 
-        assert.equal(
-            traversalSelectors.includes('header.GlobalNav'),
-            false,
-            'Initial and URL-triggered traversal should still translate stable navigation labels',
-        );
+        assert.equal(config.reactGlobalNavStyle, undefined);
     });
 
-    test(`${fileName} keeps old traversal available for stable GlobalNav labels`, () => {
+    test(`${fileName} keeps old traversal away from React GlobalNav internals`, () => {
         const config = loadConfig(fileName);
 
         assert.equal(
             config.reIgnoreClass.test('GlobalNav styles-module__appHeader__YzYWk'),
-            false,
-            'Legacy traversal should not skip the whole React global navigation',
+            true,
+            'Legacy traversal should skip the React global navigation before it is hydrated',
         );
         assert.equal(
             config.reIgnoreClass.test('Search-module__searchButton__aiE0a'),
@@ -91,3 +91,14 @@ test('main(greasyfork).user.js skips GlobalNav mutation updates for the legacy s
     assert.match(script, /ignoreMutationSelectorPage/);
     assert.match(script, /closest\?\.\(ignoreMutationSelectors\)/);
 });
+
+for (const fileName of localeFiles) {
+    test(`${fileName} translates React GlobalNav labels without CSS pseudo-elements`, () => {
+        const source = fs.readFileSync(path.join(__dirname, '..', fileName), 'utf8');
+
+        assert.match(source, /function translateReactGlobalNavLabels/);
+        assert.match(source, /textContent = label/);
+        assert.doesNotMatch(source, /::after/);
+        assert.doesNotMatch(source, /github-chinese-react-global-nav-style/);
+    });
+}

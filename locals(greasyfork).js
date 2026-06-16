@@ -233,6 +233,7 @@ I18N.conf = {
             '.monaco-editor',
         ],
         '*': [
+            'header.GlobalNav', // React 版全局导航
             '[class*="Search-module__"]', // React 版顶部搜索按钮
             'qbsearch-input', // 顶部搜索框自定义元素
             '#__primerPortalRoot__', // React 弹层挂载点
@@ -278,7 +279,7 @@ I18N.conf = {
      * tree 视图 文件名 react-directory-filename-column 提交信息 react-directory-commit-message
      * 代码差异页面 代码 pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en
      */
-    reIgnoreClass: /(Search-module|QueryBuilder|cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
+    reIgnoreClass: /(GlobalNav|Search-module|QueryBuilder|cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
 
     /**
      * 忽略区域的 itemprop 属性正则
@@ -305,6 +306,90 @@ I18N.conf = {
     // ^script$ --> 避免勿过滤 notifications-list-subscription-form
     // ^pre$ --> 避免勿过滤
 };
+
+(function setupReactGlobalNavTranslation() {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+    const labels = {
+        "Code": "代码",
+        "Issues": "议题",
+        "Pull requests": "拉取请求",
+        "Actions": "操作",
+        "Projects": "项目",
+        "Wiki": "Wiki",
+        "Security": "安全",
+        "Security and quality": "安全和质量",
+        "Insights": "洞察",
+        "Settings": "设置",
+        "Discussions": "讨论",
+        "Packages": "软件包",
+        "Releases": "发行版",
+        "Agents": "智能体",
+        "Models": "模型",
+    };
+
+    const labelSelector = 'header.GlobalNav [data-component="text"][data-content]';
+    const searchSelector = 'header.GlobalNav [class*="Search-module__"], qbsearch-input, #__primerPortalRoot__';
+    let timer = null;
+    let headerObserver = null;
+
+    function isReactGlobalNavSearchActive() {
+        const active = document.activeElement;
+        return !!active?.closest?.(searchSelector)
+            || !!document.querySelector('#__primerPortalRoot__ [role="dialog"]');
+    }
+
+    function translateReactGlobalNavLabels() {
+        if (isReactGlobalNavSearchActive()) return;
+
+        document.querySelectorAll(labelSelector).forEach(element => {
+            const source = element.getAttribute('data-content');
+            const label = labels[source];
+            if (label && element.textContent !== label) {
+                element.textContent = label;
+            }
+        });
+
+        observeReactGlobalNav();
+    }
+
+    function scheduleReactGlobalNavTranslation(delay = 800) {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(translateReactGlobalNavLabels, delay);
+    }
+
+    function scheduleReactGlobalNavSeries() {
+        [800, 1600, 3000].forEach(delay => {
+            window.setTimeout(translateReactGlobalNavLabels, delay);
+        });
+    }
+
+    function observeReactGlobalNav() {
+        if (headerObserver) return;
+
+        const header = document.querySelector('header.GlobalNav');
+        if (!header) return;
+
+        headerObserver = new MutationObserver(() => {
+            scheduleReactGlobalNavTranslation(500);
+        });
+        headerObserver.observe(header, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scheduleReactGlobalNavSeries, { once: true });
+    } else {
+        scheduleReactGlobalNavSeries();
+    }
+
+    window.addEventListener('turbo:load', scheduleReactGlobalNavSeries);
+    window.addEventListener('urlchange', scheduleReactGlobalNavSeries);
+    document.addEventListener('focusout', () => scheduleReactGlobalNavTranslation(500), true);
+})();
 
 I18N["zh-CN"] = {};
 
