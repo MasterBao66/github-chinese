@@ -311,9 +311,12 @@ I18N.conf = {
     if (typeof document === 'undefined' || typeof window === 'undefined') return;
 
     const labels = {
+        "Overview": "概況",
+        "Repositories": "儲存庫",
         "Code": "程式碼",
         "Issues": "議題",
         "Pull requests": "拉取請求",
+        "Discussions": "討論",
         "Actions": "操作",
         "Projects": "專案",
         "Wiki": "Wiki",
@@ -321,11 +324,28 @@ I18N.conf = {
         "Security and quality": "安全和品質",
         "Insights": "洞察",
         "Settings": "設定",
-        "Discussions": "討論",
         "Packages": "軟體包",
         "Releases": "發行版",
+        "Stars": "星號",
         "Agents": "智能體",
         "Models": "模型",
+        "People": "成員",
+        "Teams": "團隊",
+        "Sponsoring": "贊助",
+        "Followers": "追蹤者",
+        "Following": "正在追蹤",
+        "Activity": "活動",
+        "Branches": "分支",
+        "Tags": "標籤",
+        "Codespaces": "程式碼空間",
+        "Dashboard": "儀表板",
+        "Explore": "探索",
+        "Marketplace": "市場",
+        "Sponsors": "贊助者",
+        "Organizations": "組織",
+        "Enterprises": "企業版",
+        "Billing": "帳單",
+        "Copilot": "GitHub Copilot",
     };
 
     const labelSelector = 'header.GlobalNav [data-component="text"][data-content]';
@@ -339,12 +359,30 @@ I18N.conf = {
             || !!document.querySelector('#__primerPortalRoot__ [role="dialog"]');
     }
 
+    function findStaticGlobalNavLabel(source) {
+        const locale = I18N["zh-TW"] || I18N.zh;
+        if (!locale) return null;
+
+        for (const section of Object.values(locale)) {
+            const label = section?.static?.[source];
+            if (typeof label === 'string' && label && label !== source) {
+                return label;
+            }
+        }
+
+        return null;
+    }
+
+    function resolveReactGlobalNavLabel(source) {
+        return labels[source] || findStaticGlobalNavLabel(source);
+    }
+
     function translateReactGlobalNavLabels() {
         if (isReactGlobalNavSearchActive()) return;
 
         document.querySelectorAll(labelSelector).forEach(element => {
             const source = element.getAttribute('data-content');
-            const label = labels[source];
+            const label = resolveReactGlobalNavLabel(source);
             if (label && element.textContent !== label) {
                 element.textContent = label;
             }

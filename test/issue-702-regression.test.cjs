@@ -21,6 +21,126 @@ const protectedReactTraversalSelectors = [
     '#__primerPortalRoot__',
 ];
 
+const expectedReactNavLabels = {
+    'locals.js': {
+        labels: {
+            "Overview": "概况",
+            "Repositories": "仓库",
+            "Code": "代码",
+            "Issues": "议题",
+            "Pull requests": "拉取请求",
+            "Discussions": "讨论",
+            "Actions": "操作",
+            "Projects": "项目",
+            "Wiki": "Wiki",
+            "Security": "安全",
+            "Security and quality": "安全和质量",
+            "Insights": "洞察",
+            "Settings": "设置",
+            "Packages": "软件包",
+            "Releases": "发行版",
+            "Stars": "星标",
+            "Agents": "智能体",
+            "Models": "模型",
+            "People": "成员",
+            "Teams": "团队",
+            "Sponsoring": "赞助",
+            "Followers": "关注者",
+            "Following": "正在关注",
+            "Activity": "活动",
+            "Branches": "分支",
+            "Tags": "标签",
+            "Codespaces": "代码空间",
+            "Dashboard": "仪表板",
+            "Explore": "探索",
+            "Marketplace": "市场",
+            "Sponsors": "赞助者",
+            "Organizations": "组织",
+            "Enterprises": "企业版",
+            "Billing": "账单",
+            "Copilot": "GitHub Copilot",
+        },
+    },
+    'locals(greasyfork).js': {
+        labels: {
+            "Overview": "概况",
+            "Repositories": "仓库",
+            "Code": "代码",
+            "Issues": "议题",
+            "Pull requests": "拉取请求",
+            "Discussions": "讨论",
+            "Actions": "操作",
+            "Projects": "项目",
+            "Wiki": "Wiki",
+            "Security": "安全",
+            "Security and quality": "安全和质量",
+            "Insights": "洞察",
+            "Settings": "设置",
+            "Packages": "软件包",
+            "Releases": "发行版",
+            "Stars": "星标",
+            "Agents": "智能体",
+            "Models": "模型",
+            "People": "成员",
+            "Teams": "团队",
+            "Sponsoring": "赞助",
+            "Followers": "关注者",
+            "Following": "正在关注",
+            "Activity": "活动",
+            "Branches": "分支",
+            "Tags": "标签",
+            "Codespaces": "代码空间",
+            "Dashboard": "仪表板",
+            "Explore": "探索",
+            "Marketplace": "市场",
+            "Sponsors": "赞助者",
+            "Organizations": "组织",
+            "Enterprises": "企业版",
+            "Billing": "账单",
+            "Copilot": "GitHub Copilot",
+        },
+    },
+    'locals_zh-TW.js': {
+        labels: {
+            "Overview": "概況",
+            "Repositories": "儲存庫",
+            "Code": "程式碼",
+            "Issues": "議題",
+            "Pull requests": "拉取請求",
+            "Discussions": "討論",
+            "Actions": "操作",
+            "Projects": "專案",
+            "Wiki": "Wiki",
+            "Security": "安全",
+            "Security and quality": "安全和品質",
+            "Insights": "洞察",
+            "Settings": "設定",
+            "Packages": "軟體包",
+            "Releases": "發行版",
+            "Stars": "星號",
+            "Agents": "智能體",
+            "Models": "模型",
+            "People": "成員",
+            "Teams": "團隊",
+            "Sponsoring": "贊助",
+            "Followers": "追蹤者",
+            "Following": "正在追蹤",
+            "Activity": "活動",
+            "Branches": "分支",
+            "Tags": "標籤",
+            "Codespaces": "程式碼空間",
+            "Dashboard": "儀表板",
+            "Explore": "探索",
+            "Marketplace": "市場",
+            "Sponsors": "贊助者",
+            "Organizations": "組織",
+            "Enterprises": "企業版",
+            "Billing": "帳單",
+            "Copilot": "GitHub Copilot",
+        },
+    },
+};
+
 function loadConfig(fileName) {
     const filePath = path.join(__dirname, '..', fileName);
     const context = vm.createContext({});
@@ -95,9 +215,20 @@ test('main(greasyfork).user.js skips GlobalNav mutation updates for the legacy s
 for (const fileName of localeFiles) {
     test(`${fileName} translates React GlobalNav labels without CSS pseudo-elements`, () => {
         const source = fs.readFileSync(path.join(__dirname, '..', fileName), 'utf8');
+        const { labels } = expectedReactNavLabels[fileName];
 
         assert.match(source, /function translateReactGlobalNavLabels/);
+        assert.match(source, /function resolveReactGlobalNavLabel/);
+        assert.match(source, /function findStaticGlobalNavLabel/);
         assert.match(source, /textContent = label/);
+
+        for (const [sourceLabel, targetLabel] of Object.entries(labels)) {
+            assert.ok(
+                source.includes(`"${sourceLabel}": "${targetLabel}"`),
+                `${fileName} should include ${sourceLabel} -> ${targetLabel}`,
+            );
+        }
+
         assert.doesNotMatch(source, /::after/);
         assert.doesNotMatch(source, /github-chinese-react-global-nav-style/);
     });
