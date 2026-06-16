@@ -105,7 +105,8 @@ I18N.conf = {
             '.cm-line',
         ],
         '*': [
-            'header.GlobalNav', // React 版全局导航
+            '[class*="Search-module__"]', // React 版顶部搜索按钮
+            'qbsearch-input', // 顶部搜索框自定义元素
             '#__primerPortalRoot__', // React 弹层挂载点
             'div.QueryBuilder-StyledInputContainer', // 顶部搜索栏 关键词
             '#qb-input-query span', // 搜索页面 搜索栏 关键词
@@ -231,7 +232,8 @@ I18N.conf = {
             '.monaco-editor',
         ],
         '*': [
-            'header.GlobalNav', // React 版全局导航
+            '[class*="Search-module__"]', // React 版顶部搜索按钮
+            'qbsearch-input', // 顶部搜索框自定义元素
             '#__primerPortalRoot__', // React 弹层挂载点
             '.comment-body', '.js-preview-body',
             '.markdown-title',
@@ -275,7 +277,7 @@ I18N.conf = {
      * tree 视图 文件名 react-directory-filename-column 提交信息 react-directory-commit-message
      * 代码差异页面 代码 pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en
      */
-    reIgnoreClass: /(cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
+    reIgnoreClass: /(Search-module|QueryBuilder|cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
 
     /**
      * 忽略区域的 itemprop 属性正则
@@ -291,13 +293,13 @@ I18N.conf = {
      * /blob页面 右侧 符号筛选 filter-results
      * fix repo详情页文件路径breadcrumb
      */
-    reIgnoreId: /(readme|^offset|breadcrumb|file-name-id|filter-results)/,
+    reIgnoreId: /(__primerPortalRoot__|search-suggestions-dialog|readme|^offset|breadcrumb|file-name-id|filter-results)/,
 
     /**
      * 忽略区域的 标签 正则
      * /i 规则不区分大小写
      */
-    reIgnoreTag: ['CODE', 'SCRIPT', 'STYLE', 'LINK', 'IMG', 'MARKED-TEXT', 'PRE', 'KBD'],
+    reIgnoreTag: ['CODE', 'SCRIPT', 'STYLE', 'LINK', 'IMG', 'MARKED-TEXT', 'PRE', 'KBD', 'QBSEARCH-INPUT'],
     // marked-text --> 文件搜索模式/<user-name>/<repo-name>/find/<branch> 文件列表条目
     // ^script$ --> 避免勿过滤 notifications-list-subscription-form
     // ^pre$ --> 避免勿过滤
