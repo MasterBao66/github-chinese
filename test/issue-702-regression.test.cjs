@@ -10,25 +10,16 @@ const localeFiles = [
     'locals_zh-TW.js',
 ];
 
-const protectedReactSelectors = [
+const protectedReactMutationSelectors = [
     'header.GlobalNav',
     '#__primerPortalRoot__',
 ];
 
-const expectedNavLabels = {
-    'locals.js': {
-        code: '代码',
-        pullRequests: '拉取请求',
-    },
-    'locals(greasyfork).js': {
-        code: '代码',
-        pullRequests: '拉取请求',
-    },
-    'locals_zh-TW.js': {
-        code: '程式碼',
-        pullRequests: '拉取請求',
-    },
-};
+const protectedReactTraversalSelectors = [
+    '[class*="Search-module__"]',
+    'qbsearch-input',
+    '#__primerPortalRoot__',
+];
 
 function loadConfig(fileName) {
     const filePath = path.join(__dirname, '..', fileName);
@@ -42,30 +33,39 @@ function loadConfig(fileName) {
 }
 
 for (const fileName of localeFiles) {
-    test(`${fileName} protects React global navigation from DOM translation`, () => {
+    test(`${fileName} skips React global navigation only during mutation translation`, () => {
         const config = loadConfig(fileName);
         const mutationSelectors = config.ignoreMutationSelectorPage['*'];
         const traversalSelectors = config.ignoreSelectorPage['*'];
 
-        for (const selector of protectedReactSelectors) {
+        for (const selector of protectedReactMutationSelectors) {
             assert.ok(
                 mutationSelectors.includes(selector),
                 `${selector} must be ignored by MutationObserver translation`,
             );
+        }
+
+        for (const selector of protectedReactTraversalSelectors) {
             assert.ok(
                 traversalSelectors.includes(selector),
                 `${selector} must be ignored during the initial DOM traversal`,
             );
         }
+
+        assert.equal(
+            traversalSelectors.includes('header.GlobalNav'),
+            false,
+            'Initial and URL-triggered traversal should still translate stable navigation labels',
+        );
     });
 
-    test(`${fileName} keeps old traversal ignores scoped to React navigation widgets`, () => {
+    test(`${fileName} keeps old traversal available for stable GlobalNav labels`, () => {
         const config = loadConfig(fileName);
 
         assert.equal(
             config.reIgnoreClass.test('GlobalNav styles-module__appHeader__YzYWk'),
-            true,
-            'React global navigation class should be skipped by the legacy traversal',
+            false,
+            'Legacy traversal should not skip the whole React global navigation',
         );
         assert.equal(
             config.reIgnoreClass.test('Search-module__searchButton__aiE0a'),
@@ -82,21 +82,12 @@ for (const fileName of localeFiles) {
             'Legacy traversal should skip Primer portal roots',
         );
     });
-
-    test(`${fileName} renders React global navigation labels without changing DOM text`, () => {
-        const config = loadConfig(fileName);
-        const labels = expectedNavLabels[fileName];
-
-        assert.match(config.reactGlobalNavStyle, /header\.GlobalNav/);
-        assert.match(config.reactGlobalNavStyle, /\[data-component="text"\]\[data-content="Code"\]/);
-        assert.match(config.reactGlobalNavStyle, /\[data-component="text"\]\[data-content="Pull requests"\]/);
-        assert.ok(
-            config.reactGlobalNavStyle.includes(`content: "${labels.code}"`),
-            'CSS overlay should translate the Code tab label',
-        );
-        assert.ok(
-            config.reactGlobalNavStyle.includes(`content: "${labels.pullRequests}"`),
-            'CSS overlay should translate the Pull requests tab label',
-        );
-    });
 }
+
+test('main(greasyfork).user.js skips GlobalNav mutation updates for the legacy script', () => {
+    const script = fs.readFileSync(path.join(__dirname, '..', 'main(greasyfork).user.js'), 'utf8');
+
+    assert.match(script, /function shouldIgnoreMutation/);
+    assert.match(script, /ignoreMutationSelectorPage/);
+    assert.match(script, /closest\?\.\(ignoreMutationSelectors\)/);
+});
