@@ -56,6 +56,46 @@ I18N.conf = {
     // 特定頁面，啟用`字符資料`監測
     characterDataPage: ['repository/new', 'repository/edit', 'new', 'new/import', 'orgs/repositories/new', 'repository/blob', 'repository/pull', 'marketplace', 'homepage', 'repository/issues', 'repository/commit', 'copilot', 'spark', 'repository/settings/rules', 'pulls'],
 
+    // React 版 GlobalNav 保持 DOM 原文，使用 CSS 顯示中文，避免 React 狀態失配
+    reactGlobalNavStyle: `
+        header.GlobalNav [data-component="text"][data-content="Code"],
+        header.GlobalNav [data-component="text"][data-content="Issues"],
+        header.GlobalNav [data-component="text"][data-content="Pull requests"],
+        header.GlobalNav [data-component="text"][data-content="Actions"],
+        header.GlobalNav [data-component="text"][data-content="Projects"],
+        header.GlobalNav [data-component="text"][data-content="Wiki"],
+        header.GlobalNav [data-component="text"][data-content="Security"],
+        header.GlobalNav [data-component="text"][data-content="Security and quality"],
+        header.GlobalNav [data-component="text"][data-content="Insights"],
+        header.GlobalNav [data-component="text"][data-content="Settings"],
+        header.GlobalNav [data-component="text"][data-content="Discussions"],
+        header.GlobalNav [data-component="text"][data-content="Packages"],
+        header.GlobalNav [data-component="text"][data-content="Releases"],
+        header.GlobalNav [data-component="text"][data-content="Agents"],
+        header.GlobalNav [data-component="text"][data-content="Models"] {
+            font-size: 0 !important;
+        }
+        header.GlobalNav [data-component="text"][data-content="Code"]::after { content: "程式碼"; }
+        header.GlobalNav [data-component="text"][data-content="Issues"]::after { content: "議題"; }
+        header.GlobalNav [data-component="text"][data-content="Pull requests"]::after { content: "拉取請求"; }
+        header.GlobalNav [data-component="text"][data-content="Actions"]::after { content: "操作"; }
+        header.GlobalNav [data-component="text"][data-content="Projects"]::after { content: "專案"; }
+        header.GlobalNav [data-component="text"][data-content="Wiki"]::after { content: "Wiki"; }
+        header.GlobalNav [data-component="text"][data-content="Security"]::after { content: "安全"; }
+        header.GlobalNav [data-component="text"][data-content="Security and quality"]::after { content: "安全和品質"; }
+        header.GlobalNav [data-component="text"][data-content="Insights"]::after { content: "洞察"; }
+        header.GlobalNav [data-component="text"][data-content="Settings"]::after { content: "設定"; }
+        header.GlobalNav [data-component="text"][data-content="Discussions"]::after { content: "討論"; }
+        header.GlobalNav [data-component="text"][data-content="Packages"]::after { content: "軟體包"; }
+        header.GlobalNav [data-component="text"][data-content="Releases"]::after { content: "發行版"; }
+        header.GlobalNav [data-component="text"][data-content="Agents"]::after { content: "智能體"; }
+        header.GlobalNav [data-component="text"][data-content="Models"]::after { content: "模型"; }
+        header.GlobalNav [data-component="text"][data-content]::after {
+            font-size: 14px !important;
+            line-height: inherit;
+        }
+    `,
+
     // 特定頁面，忽略突變元素規則
     ignoreMutationSelectorPage: {
         'repository/new': [".cm-scroller"], // 程式碼編輯器
@@ -105,6 +145,7 @@ I18N.conf = {
             '.cm-line',
         ],
         '*': [
+            'header.GlobalNav', // React 版全域導覽
             '[class*="Search-module__"]', // React 版頂部搜尋按鈕
             'qbsearch-input', // 頂部搜尋框自定義元素
             '#__primerPortalRoot__', // React 彈層掛載點
@@ -232,6 +273,7 @@ I18N.conf = {
             '.monaco-editor',
         ],
         '*': [
+            'header.GlobalNav', // React 版全域導覽
             '[class*="Search-module__"]', // React 版頂部搜尋按鈕
             'qbsearch-input', // 頂部搜尋框自定義元素
             '#__primerPortalRoot__', // React 彈層掛載點
@@ -277,7 +319,7 @@ I18N.conf = {
      * tree 視圖 檔名 react-directory-filename-column 提交訊息 react-directory-commit-message
      * 程式碼差異頁面 程式碼 pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en
      */
-    reIgnoreClass: /(Search-module|QueryBuilder|cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
+    reIgnoreClass: /(GlobalNav|Search-module|QueryBuilder|cm-line|ͼ.*|pl-s1|pl-smi|pl-token|pl-c1|pl-kos|pl-k|pl-c|pl-en|CodeMirror|blob-code|highlight-.*|repo-and-owner|js-path-segment|final-path|files js-navigation-container|js-comment-body|js-preview-body|comment-form-textarea|markdown-title|js-tree-finder-virtual-filter|js-navigation-open Link--primary|js-modifier-key|capped-list-label|blob-code blob-code-inner js-file-line|markdown-body my-3|f4 my-3|commit-author$|search-match|react-directory-filename-column|react-directory-commit-message|react-code-text|zausi)/,
 
     /**
      * 忽略區域的 itemprop 屬性正則
@@ -304,6 +346,29 @@ I18N.conf = {
     // ^script$ --> 避免勿過濾 notifications-list-subscription-form
     // ^pre$ --> 避免勿過濾
 };
+
+(function installReactGlobalNavStyle() {
+    if (typeof document === 'undefined') return;
+
+    const styleId = 'github-chinese-react-global-nav-style';
+    const inject = () => {
+        if (document.getElementById(styleId)) return;
+
+        const css = I18N && I18N.conf && I18N.conf.reactGlobalNavStyle;
+        const parent = document.head || document.documentElement;
+        if (!css || !parent) return;
+
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = css;
+        parent.appendChild(style);
+    };
+
+    inject();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inject, { once: true });
+    }
+})();
 
 I18N["zh-TW"] = {};
 
